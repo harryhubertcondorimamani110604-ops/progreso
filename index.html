@@ -1,0 +1,1643 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Panel de control de inventario " />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <title>proyec | Control de inventario</title>
+  </head>
+  <body>
+    <section class="login-screen" id="loginScreen">
+      <div class="login-brand">
+        <img src="logo.svg" alt="Logo CHEBROX" /><span>SISTEMA </span>
+      </div>
+      <div class="login-layout">
+        <div class="login-intro">
+          <p class="eyebrow">CENTRO DE OPERACIONES</p>
+          <h1>Control de inventario</h1>
+          <p>
+            Administra existencias, movimientos y proveedores desde un solo
+            lugar.
+          </p>
+          <div class="login-ornament">
+            <small>productos<br />registrados</small>
+          </div>
+        </div>
+        <form class="login-card" id="loginForm">
+          <div class="login-card-heading">
+            <p class="eyebrow">ACCESO SEGURO</p>
+            <h2>Bienvenido de nuevo</h2>
+            <p>Ingresa tu PIN para continuar.</p>
+          </div>
+          <label for="loginPin"
+            >PIN de acceso
+            <div class="password-field">
+              <input
+                id="loginPin"
+                name="pin"
+                type="password"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="4"
+                autocomplete="one-time-code"
+                placeholder="Ingresa tu PIN"
+                required
+              /><button
+                type="button"
+                id="togglePassword"
+                aria-label="Mostrar PIN"
+              >
+                ◉
+              </button>
+            </div></label
+          >
+          <div class="login-options">
+            <label class="remember"
+              ><input type="checkbox" id="rememberUser" />
+              <span>Recordar PIN</span></label
+            ><a href="#login" id="forgotPassword">¿Necesitas ayuda?</a>
+          </div>
+          <p class="login-error" id="loginError" role="alert"></p>
+          <button class="primary-button login-button" type="submit">
+            Entrar al sistema <span>→</span>
+          </button>
+          <p class="login-hint">PIN de demostración: <strong>2026</strong></p>
+        </form>
+      </div>
+    </section>
+
+    <div class="app-shell locked" id="appShell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="logo.svg" alt="Logo CHEBROX" /><span>CHEBROX</span>
+        </div>
+        <div class="workspace-label">CENTRO DE OPERACIONES</div>
+        <nav class="main-nav" aria-label="Navegación principal">
+          <a class="nav-item active" href="#inventario"
+            ><span class="nav-icon">▦</span>Lista de productos</a
+          >
+          <a class="nav-item" href="#ingreso"
+            ><span class="nav-icon">＋</span>Ingreso</a
+          >
+          <a class="nav-item" href="#movimientos"
+            ><span class="nav-icon">↕</span>Movimientos</a
+          >
+          <a class="nav-item" href="#proveedores"
+            ><span class="nav-icon">◌</span>Proveedores</a
+          >
+          <a class="nav-item" href="#pedidos"
+            ><span class="nav-icon">⌁</span>Pedidos</a
+          >
+        </nav>
+        <div class="sidebar-bottom">
+          <a class="nav-item" href="#configuracion"
+            ><span class="nav-icon">⚙</span>Configuración</a
+          >
+          <div class="support-card">
+            <span class="support-dot"></span>
+            <div>
+              <strong>Sistema operativo</strong
+              ><small>Todos los servicios activos</small>
+            </div>
+          </div>
+          <button class="user-profile" id="logoutButton" type="button">
+            <div class="avatar">MR</div>
+            <div>
+              <strong>PROGRESO</strong><small>Administradora · Salir</small>
+            </div>
+            <span class="more">↪</span>
+          </button>
+        </div>
+      </aside>
+      <button
+        class="menu-overlay"
+        id="menuOverlay"
+        type="button"
+        aria-label="Cerrar menú"
+      ></button>
+
+      <main class="main-content" id="inventario">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button
+              class="menu-toggle"
+              id="menuToggle"
+              type="button"
+              aria-label="Abrir menú"
+              aria-expanded="false"
+            >
+              <span></span><span></span><span></span>
+            </button>
+            <div class="breadcrumb">
+              <span>CHEBROX</span><b>/</b>
+              <strong id="currentView">Lista de productos</strong>
+            </div>
+          </div>
+          <div class="top-actions">
+            <button class="icon-button" aria-label="Buscar">⌕</button
+            ><button
+              class="icon-button notification"
+              aria-label="Notificaciones"
+            >
+              ♧<i></i>
+            </button>
+            <div class="top-avatar">MR</div>
+          </div>
+        </header>
+
+        <div class="page-heading inventory-only">
+          <div>
+            <p class="eyebrow" id="fecha-actual">HOY</p>
+            <h1>Lista de productos</h1>
+            <p class="subtitle">
+              Supervisa existencias y mantén tu operación en movimiento.
+            </p>
+          </div>
+          <button class="primary-button" id="openProduct">
+            <span>＋</span> Ingreso
+          </button>
+        </div>
+
+        <section
+          class="stats-grid inventory-only"
+          aria-label="Resumen del inventario"
+        >
+          <article class="stat-card">
+            <div class="stat-top">
+              <span>Productos totales</span
+              ><span class="stat-icon blue">▦</span>
+            </div>
+            <strong id="totalProducts">0</strong>
+            <p>
+              <span class="trend up">↗ 12.5%</span>
+              <span>vs. mes anterior</span>
+            </p>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top">
+              <span>Entradas este mes</span
+              ><span class="stat-icon green">↓</span>
+            </div>
+            <strong id="monthlyEntries">0</strong>
+            <p>
+              <span class="trend up">↗ 18.4%</span>
+              <span>vs. mes anterior</span>
+            </p>
+          </article>
+        </section>
+
+        <section class="inventory-panel inventory-only">
+          <div class="panel-header">
+            <div>
+              <h2>Productos</h2>
+              <p>Gestiona el stock de todas tus referencias.</p>
+            </div>
+            <div class="panel-actions">
+              <button
+                class="danger-button"
+                id="deleteAllProducts"
+                type="button"
+              >
+                × Vaciar inventario</button
+              ><button class="outline-button" id="exportButton">
+                ⇩ Exportar
+              </button>
+            </div>
+          </div>
+          <div class="toolbar">
+            <label class="search-box"
+              ><span>⌕</span
+              ><input
+                id="searchInput"
+                type="search"
+                placeholder="Buscar por nombre o SKU..."
+                aria-label="Buscar productos" /></label
+            ><select id="categoryFilter" aria-label="Filtrar por categoría">
+              <option value="">Todas las categorías</option>
+              <option>Medicamentos</option>
+              <option>Dispositivos médicos</option>
+              <option>Higiene y cuidado personal</option>
+              <option>Vitaminas y suplementos</option></select
+            ><select id="stockFilter" aria-label="Filtrar por estado">
+              <option value="">Todos los estados</option>
+              <option value="normal">Stock normal</option>
+              <option value="low">Stock bajo</option>
+              <option value="out">Agotado</option></select
+            ><button class="filter-button" aria-label="Más filtros">≡</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>PRODUCTO / ID</th>
+                  <th>CATEGORÍA</th>
+                  <th>LABORATORIO</th>
+                  <th>VENCIMIENTO</th>
+                  <th>PROVEEDOR</th>
+                  <th>P.U. COMPRA</th>
+                  <th>PRECIO DE VENTA</th>
+                  <th>P.T. COMPRA</th>
+                  <th>ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody id="productTable"></tbody>
+            </table>
+          </div>
+          <div class="table-footer">
+            <span id="productSummary">Mostrando 0 productos</span>
+            <div
+              class="pagination"
+              id="productPagination"
+              aria-label="Paginación de productos"
+            ></div>
+          </div>
+        </section>
+        <section class="module-view" id="ingreso">
+          <div class="module-heading">
+            <div>
+              <p class="eyebrow">REGISTRO DE MERCADERÍA</p>
+              <h2>Ingreso</h2>
+              <p>
+                Registra toda la información del producto para incorporarlo al
+                inventario.
+              </p>
+            </div>
+            <button class="primary-button" id="newEntryButton" type="button">
+              ＋ Nuevo ingreso
+            </button>
+          </div>
+          <div class="entry-import-box">
+            <div>
+              <strong>Ingreso rápido desde Excel</strong
+              ><small
+                >Importa varios productos usando el mismo orden del
+                formulario.</small
+              >
+            </div>
+            <div class="entry-import-actions">
+              <button
+                class="outline-button"
+                id="downloadTemplate"
+                type="button"
+              >
+                ⇩ Descargar formato</button
+              ><button class="outline-button" id="importExcel" type="button">
+                ＋ Importar Excel</button
+              ><input
+                id="entryImportInput"
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                hidden
+              />
+            </div>
+          </div>
+          <div class="ingreso-products-heading">
+            <strong>Productos ingresados</strong
+            ><span>Listado de ingresos registrados</span>
+          </div>
+          <div class="ingreso-products-list" id="ingresoProductsList"></div>
+          <div class="ingreso-form-panel" id="ingresoFormContainer"></div>
+          <button
+            class="outline-button ingreso-products-button"
+            id="showEnteredProducts"
+            type="button"
+          >
+            Agregar productos ingresados
+          </button>
+        </section>
+        <section class="module-view" id="movimientos">
+          <div class="module-heading">
+            <div>
+              <p class="eyebrow">CONTROL DE OPERACIONES</p>
+              <h2>Movimientos</h2>
+              <p>Consulta las entradas y salidas recientes del inventario.</p>
+            </div>
+            <button
+              class="outline-button"
+              type="button"
+              data-toast="Reporte de movimientos listo"
+            >
+              ⇩ Exportar
+            </button>
+          </div>
+          <div class="movement-report">
+            <div class="report-block">
+              <button class="report-toggle" type="button" aria-expanded="false">
+                <span
+                  ><strong>Entradas de productos</strong
+                  ><small
+                    >Consulta la fecha de ingreso de cada producto.</small
+                  ></span
+                ><b>＋</b>
+              </button>
+              <div class="report-content">
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>FECHA DE INGRESO</th>
+                        <th>PRODUCTO / ID</th>
+                        <th>PROVEEDOR</th>
+                        <th>CANTIDAD</th>
+                      </tr>
+                    </thead>
+                    <tbody id="entryHistory"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="report-block">
+              <button class="report-toggle" type="button" aria-expanded="false">
+                <span
+                  ><strong>Historial de pedidos</strong
+                  ><small
+                    >Consulta los productos seleccionados por fecha.</small
+                  ></span
+                ><b>＋</b>
+              </button>
+              <div class="report-content">
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>FECHA</th>
+                        <th>PRODUCTO</th>
+                        <th>PROVEEDOR</th>
+                        <th>P.T. COMPRA</th>
+                      </tr>
+                    </thead>
+                    <tbody id="orderHistory"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="module-view" id="proveedores">
+          <div class="module-heading">
+            <div>
+              <p class="eyebrow">RED DE ABASTECIMIENTO</p>
+              <h2>Proveedores</h2>
+              <p>Organiza tus aliados comerciales y sus referencias.</p>
+            </div>
+            <button class="primary-button" id="openProvider" type="button">
+              ＋ Nuevo proveedor
+            </button>
+          </div>
+          <div class="supplier-grid" id="providerList">
+            <p class="empty-state">
+              Todavía no hay proveedores registrados. Se mostrarán aquí al
+              ingresar productos.
+            </p>
+          </div>
+        </section>
+        <section class="module-view" id="pedidos">
+          <div class="module-heading">
+            <div>
+              <p class="eyebrow">CENTRO DE PEDIDOS</p>
+              <h2>Lista de pedidos</h2>
+              <p>
+                Selecciona productos con el botón + y aparecerán aquí
+                automáticamente.
+              </p>
+            </div>
+            <button class="primary-button" id="goToOrderProducts" type="button">
+              ＋ Agregar pedido
+            </button>
+          </div>
+          <div class="order-stats">
+            <div>
+              <span>Productos seleccionados</span><strong>0</strong
+              ><small>Se agregan desde Lista de productos</small>
+            </div>
+          </div>
+          <div class="orders-empty" id="ordersEmpty">
+            <span class="order-orbit">⌁</span>
+            <strong>Aún no hay pedidos</strong>
+            <p>
+              Los nuevos pedidos aparecerán aquí para que puedas darles
+              seguimiento.
+            </p>
+          </div>
+          <div class="orders-list-heading">
+            <strong>Productos seleccionados</strong
+            ><span>Precios del proveedor · IGV incluido</span>
+          </div>
+          <div class="orders-list" id="ordersList"></div>
+          <div class="order-totals" id="orderTotals">
+            <div>
+              <span>Subtotal sin IGV</span
+              ><strong id="orderSubtotal">S/ 0.00</strong>
+            </div>
+            <div>
+              <span>IGV incluido (18%)</span
+              ><strong id="orderTax">S/ 0.00</strong>
+            </div>
+            <div class="grand-total">
+              <span>Total del pedido (IGV incluido)</span
+              ><strong id="orderTotal">S/ 0.00</strong>
+            </div>
+          </div>
+          <div class="excel-export-panel">
+            <div>
+              <p class="eyebrow">DOCUMENTO DE COMPRA</p>
+              <h3>Descargar en Excel la lista de pedidos</h3>
+              <p>Elige la categoría y la información que quieres incluir.</p>
+            </div>
+            <label
+              >Categoría<select id="orderExportCategory">
+                <option value="">Todas las categorías</option>
+                <option>Medicamentos</option>
+                <option>Dispositivos médicos</option>
+                <option>Higiene y cuidado personal</option>
+                <option>Vitaminas y suplementos</option>
+              </select></label
+            >
+            <div class="export-fields">
+              <label
+                ><input
+                  type="checkbox"
+                  class="export-field"
+                  value="name"
+                  checked
+                />
+                Producto e ID</label
+              ><label
+                ><input
+                  type="checkbox"
+                  class="export-field"
+                  value="category"
+                  checked
+                />
+                Categoría</label
+              ><label
+                ><input
+                  type="checkbox"
+                  class="export-field"
+                  value="laboratory"
+                  checked
+                />
+                Laboratorio</label
+              ><label
+                ><input
+                  type="checkbox"
+                  class="export-field"
+                  value="provider"
+                  checked
+                />
+                Proveedor</label
+              ><label
+                ><input
+                  type="checkbox"
+                  class="export-field"
+                  value="quantity"
+                  checked
+                />
+                Cantidad</label
+              ><label
+                ><input
+                  type="checkbox"
+                  class="export-field"
+                  value="price"
+                  checked
+                />
+                P.U. COMPRA</label
+              ><label
+                ><input
+                  type="checkbox"
+                  class="export-field"
+                  value="wholesale"
+                  checked
+                />
+                P.T. COMPRA</label
+              ><label
+                ><input
+                  type="checkbox"
+                  class="export-field"
+                  value="total"
+                  checked
+                />
+                Total</label
+              >
+            </div>
+            <button
+              class="primary-button"
+              id="downloadOrdersExcel"
+              type="button"
+            >
+              ⇩ Descargar lista de pedidos en Excel
+            </button>
+          </div>
+        </section>
+        <section class="module-view" id="pedido-productos">
+          <div class="module-heading">
+            <div>
+              <p class="eyebrow">CATÁLOGO PARA PEDIDOS</p>
+              <h2>Agregar productos al pedido</h2>
+              <p>
+                Selecciona los productos disponibles y se copiarán
+                automáticamente a tu lista de pedidos.
+              </p>
+            </div>
+            <button class="outline-button" id="backToOrders" type="button">
+              ← Volver a pedidos
+            </button>
+          </div>
+          <div class="order-product-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>PRODUCTO / ID</th>
+                  <th>CATEGORÍA</th>
+                  <th>LABORATORIO</th>
+                  <th>PROVEEDOR</th>
+                  <th>P.U. COMPRA</th>
+                  <th>P.T. COMPRA</th>
+                  <th>ACCIÓN</th>
+                </tr>
+              </thead>
+              <tbody id="orderProductTable"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="module-view" id="configuracion">
+          <div class="module-heading">
+            <div>
+              <p class="eyebrow">PREFERENCIAS DEL SISTEMA</p>
+              <h2>Configuración</h2>
+              <p>Personaliza tu espacio de trabajo CHEBROX.</p>
+            </div>
+          </div>
+          <div class="settings-list">
+            <label
+              >Nombre de la empresa<input
+                value="CHEBROX"
+                aria-label="Nombre de la empresa" /></label
+            ><label
+              >Moneda<select aria-label="Moneda">
+                <option>Dólar estadounidense (USD)</option>
+                <option>Sol peruano (PEN)</option>
+              </select></label
+            ><label class="setting-toggle"
+              ><span
+                ><strong>Alertas de stock bajo</strong
+                ><small
+                  >Recibe avisos cuando un producto necesite reposición.</small
+                ></span
+              ><input
+                type="checkbox"
+                checked
+                aria-label="Activar alertas de stock bajo"
+            /></label>
+          </div>
+        </section>
+        <footer>
+          © 2026 CHEBROX <span>•</span> Última sincronización: hace 2 minutos
+        </footer>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="productModal" aria-hidden="true">
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+      >
+        <button class="close-modal" id="closeProduct" aria-label="Cerrar">
+          ×
+        </button>
+        <p class="eyebrow">CATÁLOGO CHEBROX</p>
+        <h2 id="modalTitle">Ingreso</h2>
+        <p class="modal-copy">
+          Registra el producto, su proveedor y sus precios de compra.
+        </p>
+        <form id="productForm">
+          <label
+            >Nombre del producto<input
+              name="name"
+              required
+              placeholder="Ej. Paracetamol 500 mg"
+          /></label>
+          <label
+            >ID del producto<input name="sku" required placeholder="CHB-00000"
+          /></label>
+          <div class="form-row">
+            <label
+              >Categoría<select name="category">
+                <option>Medicamentos</option>
+                <option>Dispositivos médicos</option>
+                <option>Higiene y cuidado personal</option>
+                <option>Vitaminas y suplementos</option>
+              </select></label
+            >
+            <label
+              >Laboratorio<input
+                name="laboratory"
+                placeholder="Ej. Bayer, Pfizer"
+            /></label>
+          </div>
+          <div class="form-row">
+            <label
+              >Cantidad<input
+                name="stock"
+                type="number"
+                min="1"
+                required
+                value="1"
+            /></label>
+          </div>
+          <label
+            >Fecha de ingreso<input name="entryDate" type="date" required
+          /></label>
+          <div class="form-row">
+            <label
+              >Fecha de vencimiento (opcional)<input
+                name="expiration"
+                type="date"
+            /></label>
+            <label
+              >Proveedor<select name="provider" id="providerSelect" required>
+                <option value="">Selecciona un proveedor</option>
+              </select></label
+            >
+          </div>
+          <div class="form-row">
+            <label
+              >P.U. compra<input
+                name="price"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                placeholder="0.00"
+            /></label>
+            <label
+              >Precio de venta<input
+                name="salePrice"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                placeholder="0.00"
+            /></label>
+          </div>
+          <div class="form-row">
+            <label
+              >P.T. compra<input
+                name="wholesale"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                readonly
+                placeholder="0.00"
+            /></label>
+          </div>
+          <button class="primary-button full" type="submit">
+            Guardar ingreso
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="modal-backdrop" id="providerModal" aria-hidden="true">
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="providerModalTitle"
+      >
+        <button
+          class="close-modal"
+          id="closeProvider"
+          type="button"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+        <p class="eyebrow">RED DE ABASTECIMIENTO</p>
+        <h2 id="providerModalTitle">Nuevo proveedor</h2>
+        <p class="modal-copy">
+          Registra los datos para poder seleccionarlo al ingresar productos.
+        </p>
+        <form id="providerForm">
+          <label
+            >Nombre del proveedor<input
+              name="providerName"
+              required
+              placeholder="Ej. Distribuciones Nova"
+          /></label>
+          <label
+            >RUC<input
+              name="ruc"
+              required
+              inputmode="numeric"
+              pattern="[0-9]{11}"
+              maxlength="11"
+              placeholder="11 dígitos"
+          /></label>
+          <button class="primary-button full" type="submit">
+            Guardar proveedor
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="modal-backdrop" id="importProviderModal" aria-hidden="true">
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="importProviderTitle"
+      >
+        <button
+          class="close-modal"
+          id="closeImportProvider"
+          type="button"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+        <p class="eyebrow">IMPORTACIÓN EXCEL</p>
+        <h2 id="importProviderTitle">Selecciona el proveedor</h2>
+        <p class="modal-copy">
+          Todos los productos del archivo se registrarán con este proveedor.
+        </p>
+        <label
+          >Proveedor<select id="importProviderSelect" required>
+            <option value="">Selecciona un proveedor</option>
+          </select></label
+        >
+        <button
+          class="primary-button full"
+          id="continueExcelImport"
+          type="button"
+        >
+          Continuar con Excel
+        </button>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status">
+      Producto guardado correctamente
+    </div>
+    <a
+      class="whatsapp-button"
+      href="https://wa.me/51944865634?text=Hola%20CHEBROX%2C%20necesito%20ayuda%20con%20mi%20inventario"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Contactar a CHEBROX por WhatsApp"
+      ><span>◔</span></a
+    >
+    <script>
+      const loginScreen = document.getElementById("loginScreen");
+      const appShell = document.getElementById("appShell");
+      const loginForm = document.getElementById("loginForm");
+      const loginError = document.getElementById("loginError");
+      const rememberedPin = localStorage.getItem("chebroxPin");
+      if (rememberedPin)
+        document.getElementById("loginPin").value = rememberedPin;
+      const showDashboard = () => {
+        loginScreen.classList.add("hidden");
+        appShell.classList.remove("locked");
+      };
+      if (localStorage.getItem("chebroxSession") === "active") showDashboard();
+      const apiBase =
+        window.location.port === "3000"
+          ? "/api"
+          : "http://localhost:3000/api";
+      const apiRequest = async (path, options = {}) => {
+        const response = await fetch(`${apiBase}${path}`, {
+          headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+          ...options,
+        });
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.error || "No se pudo conectar con el servidor.");
+        }
+        return response.status === 204 ? null : response.json();
+      };
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const pin = document.getElementById("loginPin").value.trim();
+        try {
+          await apiRequest("/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ pin }),
+          });
+          localStorage.setItem("chebroxSession", "active");
+          if (document.getElementById("rememberUser").checked)
+            localStorage.setItem("chebroxPin", pin);
+          else localStorage.removeItem("chebroxPin");
+          loginError.textContent = "";
+          showDashboard();
+          loadData();
+        } catch (error) {
+          loginError.textContent = error.message;
+        }
+      });
+      document
+        .getElementById("togglePassword")
+        .addEventListener("click", (event) => {
+          const pinInput = document.getElementById("loginPin");
+          pinInput.type = pinInput.type === "password" ? "text" : "password";
+          event.currentTarget.textContent =
+            pinInput.type === "password" ? "◉" : "◎";
+        });
+      document
+        .getElementById("forgotPassword")
+        .addEventListener("click", (event) => {
+          event.preventDefault();
+          loginError.textContent = "PIN de acceso: 2026.";
+        });
+      document.getElementById("logoutButton").addEventListener("click", () => {
+        localStorage.removeItem("chebroxSession");
+        appShell.classList.add("locked");
+        loginScreen.classList.remove("hidden");
+        document.getElementById("loginPin").value = "";
+      });
+      const modal = document.getElementById("productModal");
+      const openModal = () => {
+        modal.classList.add("show");
+        modal.setAttribute("aria-hidden", "false");
+        document.querySelector('[name="name"]').focus();
+      };
+      const closeModal = () => {
+        modal.classList.remove("show");
+        modal.setAttribute("aria-hidden", "true");
+      };
+      document
+        .getElementById("openProduct")
+        .addEventListener("click", () => showView("ingreso"));
+      document
+        .getElementById("closeProduct")
+        .addEventListener("click", closeModal);
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) closeModal();
+      });
+      const providerModal = document.getElementById("providerModal");
+      const openProviderModal = () => {
+        providerModal.classList.add("show");
+        providerModal.setAttribute("aria-hidden", "false");
+        document.querySelector('[name="providerName"]').focus();
+      };
+      const closeProviderModal = () => {
+        providerModal.classList.remove("show");
+        providerModal.setAttribute("aria-hidden", "true");
+      };
+      document
+        .getElementById("openProvider")
+        .addEventListener("click", openProviderModal);
+      document
+        .getElementById("closeProvider")
+        .addEventListener("click", closeProviderModal);
+      providerModal.addEventListener("click", (event) => {
+        if (event.target === providerModal) closeProviderModal();
+      });
+      let products = [];
+      let pendingProducts = [];
+      let orders = [];
+      let providers = [];
+      const productsPerPage = 10;
+      let currentProductPage = 1;
+      const showToast = (message) => {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3000);
+      };
+      const saveProduct = (product) =>
+        apiRequest("/products", {
+          method: "POST",
+          body: JSON.stringify(product),
+        }).catch((error) => showToast(error.message));
+      const saveProvider = (provider) =>
+        apiRequest("/providers", {
+          method: "POST",
+          body: JSON.stringify(provider),
+        }).catch((error) => showToast(error.message));
+      const saveOrder = (order) =>
+        apiRequest("/orders", {
+          method: "POST",
+          body: JSON.stringify(order),
+        }).catch((error) => showToast(error.message));
+      const money = (value) =>
+        `S/ ${Number(value).toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const today = () => new Date().toISOString().slice(0, 10);
+      const updatePurchaseTotal = () => {
+        const quantity =
+          Number(document.querySelector('#productForm [name="stock"]').value) ||
+          0;
+        const unitPrice =
+          Number(document.querySelector('#productForm [name="price"]').value) ||
+          0;
+        document.querySelector('#productForm [name="wholesale"]').value = (
+          quantity * unitPrice
+        ).toFixed(2);
+      };
+      document
+        .querySelectorAll(
+          '#productForm [name="stock"], #productForm [name="price"]',
+        )
+        .forEach((field) =>
+          field.addEventListener("input", updatePurchaseTotal),
+        );
+      document.querySelector('#productForm [name="entryDate"]').value = today();
+      const renderProviderOptions = () => {
+        const select = document.getElementById("providerSelect");
+        select.innerHTML =
+          '<option value="">Selecciona un proveedor</option>' +
+          providers
+            .map(
+              (provider) =>
+                `<option value="${provider.name}">${provider.name} · RUC ${provider.ruc}</option>`,
+            )
+            .join("");
+      };
+      let importProvider = null;
+      const importProviderModal = document.getElementById(
+        "importProviderModal",
+      );
+      const openImportProvider = () => {
+        const select = document.getElementById("importProviderSelect");
+        select.innerHTML =
+          '<option value="">Selecciona un proveedor</option>' +
+          providers
+            .map(
+              (provider) =>
+                `<option value="${provider.name}">${provider.name} · RUC ${provider.ruc}</option>`,
+            )
+            .join("");
+        importProviderModal.classList.add("show");
+        importProviderModal.setAttribute("aria-hidden", "false");
+      };
+      const closeImportProvider = () => {
+        importProviderModal.classList.remove("show");
+        importProviderModal.setAttribute("aria-hidden", "true");
+      };
+      document
+        .getElementById("importExcel")
+        .addEventListener("click", openImportProvider);
+      document
+        .getElementById("closeImportProvider")
+        .addEventListener("click", closeImportProvider);
+      document
+        .getElementById("continueExcelImport")
+        .addEventListener("click", () => {
+          const provider = providers.find(
+            (item) =>
+              item.name ===
+              document.getElementById("importProviderSelect").value,
+          );
+          if (!provider) return;
+          importProvider = provider;
+          closeImportProvider();
+          document.getElementById("entryImportInput").click();
+        });
+      const renderEntryProducts = () => {
+        const list = document.getElementById("ingresoProductsList");
+        const allEntries = [...pendingProducts, ...products];
+        list.innerHTML = allEntries.length
+          ? allEntries
+              .map(
+                (product) =>
+                  `<div class="ingreso-product-row"><div><strong>${product.name}</strong><small>ID: ${product.sku} · ${product.provider}</small></div><span>${product.entryDate || "Sin fecha"}</span></div>`,
+              )
+              .join("")
+          : '<p class="empty-state">Todavía no hay productos ingresados.</p>';
+      };
+      const normalizeHeader = (value) =>
+        String(value || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]/g, "");
+      const formatImportedDate = (value) => {
+        if (!value) return today();
+        if (typeof value === "number")
+          return new Date(Date.UTC(1899, 11, 30) + value * 86400000)
+            .toISOString()
+            .slice(0, 10);
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime())
+          ? String(value)
+          : parsed.toISOString().slice(0, 10);
+      };
+      const importProductsFromExcel = (rows, selectedProvider) => {
+        const required = [
+          "nombre",
+          "id",
+          "categoria",
+          "cantidad",
+          "pucompra",
+          "preciodeventa",
+          "ptcompra",
+        ];
+        const headers = Object.keys(rows[0] || {}).map(normalizeHeader);
+        const missing = required.filter((header) => !headers.includes(header));
+        if (missing.length) return `Faltan columnas: ${missing.join(", ")}`;
+        let imported = 0;
+        rows.forEach((row) => {
+          const values = {};
+          Object.entries(row).forEach(([key, value]) => {
+            values[normalizeHeader(key)] = value;
+          });
+          if (
+            values.nombre &&
+            values.id &&
+            Number(values.cantidad) > 0 &&
+            values.pucompra !== "" &&
+            values.preciodeventa !== "" &&
+            values.ptcompra !== "" &&
+            !products.some(
+              (product) => product.sku === String(values.id).trim(),
+            ) &&
+            !pendingProducts.some(
+              (product) => product.sku === String(values.id).trim(),
+            )
+          ) {
+            pendingProducts.push({
+              name: String(values.nombre).trim(),
+              sku: String(values.id).trim(),
+              category: values.categoria || "Medicamentos",
+              laboratory: values.laboratorio
+                ? String(values.laboratorio).trim()
+                : "",
+              stock: Number(values.cantidad),
+              entryDate: today(),
+              expiration:
+                formatImportedDate(values.fechadevencimiento) === today() &&
+                !values.fechadevencimiento
+                  ? ""
+                  : formatImportedDate(values.fechadevencimiento),
+              provider: selectedProvider.name,
+              price: Number(values.pucompra),
+              salePrice: Number(values.preciodeventa),
+              wholesale: (
+                Number(values.cantidad) * Number(values.pucompra)
+              ).toFixed(2),
+            });
+            imported++;
+          }
+        });
+        pendingProducts.forEach((product) => saveProduct({ ...product, status: "pending" }));
+        renderProducts();
+        renderEntryProducts();
+        filterProducts();
+        return imported
+          ? `${imported} producto(s) importado(s) correctamente.`
+          : "No se importaron filas. Revisa IDs duplicados.";
+      };
+      const renderOrderProducts = () => {
+        const table = document.getElementById("orderProductTable");
+        table.innerHTML = products.length
+          ? products
+              .map(
+                (product, index) =>
+                  `<tr><td><strong>${product.name}</strong><small>ID: ${product.sku}</small></td><td>${product.category}</td><td>${product.laboratory || "—"}</td><td>${product.provider}</td><td>${money(product.price)}</td><td>${money(product.wholesale)}</td><td><button class="add-order catalog-add ${orders.some((order) => order.sku === product.sku) ? "selected" : ""}" data-index="${index}" type="button" aria-label="${orders.some((order) => order.sku === product.sku) ? "Producto ya agregado al pedido" : `Agregar ${product.name} al pedido`}">＋ Agregar</button></td></tr>`,
+              )
+              .join("")
+          : '<tr><td colspan="7" class="empty-state">No hay productos registrados todavía.</td></tr>';
+        table
+          .querySelectorAll(".catalog-add")
+          .forEach((button) =>
+            button.addEventListener("click", () =>
+              addToOrder(Number(button.dataset.index)),
+            ),
+          );
+      };
+      document
+        .getElementById("providerForm")
+        .addEventListener("submit", (event) => {
+          event.preventDefault();
+          const data = new FormData(event.target);
+          const provider = {
+            name: data.get("providerName").trim(),
+            ruc: data.get("ruc").trim(),
+          };
+          if (!providers.some((item) => item.ruc === provider.ruc)) {
+            providers.push(provider);
+            saveProvider(provider);
+            renderProviderOptions();
+            document.getElementById("providerSelect").value = provider.name;
+            renderProviderPrices();
+          }
+          event.target.reset();
+          closeProviderModal();
+        });
+      const renderProducts = () => {
+        const table = document.getElementById("productTable");
+        table.innerHTML = products
+          .map(
+            (product, index) =>
+              `<tr data-category="${product.category}" data-stock="${product.stock > 5 ? "normal" : "low"}"><td><div class="product-cell"><div class="product-image blue">▦</div><div><strong>${product.name}</strong><small>ID: ${product.sku} · ${product.stock} unidades</small></div></div></td><td>${product.category}</td><td>${product.laboratory || "—"}</td><td>${product.expiration}</td><td>${product.provider}</td><td>${money(product.price)}</td><td>${money(product.salePrice)}</td><td>${money(product.wholesale)}</td><td><div class="row-actions"><button class="row-menu edit-product" data-index="${index}" aria-label="Editar ${product.name}">✎</button><button class="row-menu add-order ${orders.some((order) => order.sku === product.sku) ? "selected" : ""}" data-index="${index}" aria-label="${orders.some((order) => order.sku === product.sku) ? "Producto ya agregado a pedidos" : `Agregar ${product.name} a pedidos`}">＋</button><button class="row-menu delete-product" data-index="${index}" aria-label="Eliminar ${product.name}">×</button></div></td></tr>`,
+          )
+          .join("");
+        document.getElementById("totalProducts").textContent = products.length;
+        document.getElementById("monthlyEntries").textContent = products.reduce(
+          (total, product) => total + Number(product.stock),
+          0,
+        );
+        document.getElementById("deleteAllProducts").disabled =
+          products.length === 0;
+        table
+          .querySelectorAll(".edit-product")
+          .forEach((button) =>
+            button.addEventListener("click", () =>
+              editProduct(Number(button.dataset.index)),
+            ),
+          );
+        table
+          .querySelectorAll(".add-order")
+          .forEach((button) =>
+            button.addEventListener("click", () =>
+              addToOrder(Number(button.dataset.index)),
+            ),
+          );
+        table.querySelectorAll(".delete-product").forEach((button) =>
+          button.addEventListener("click", () => {
+            const index = Number(button.dataset.index);
+            const sku = products[index].sku;
+            apiRequest(`/products/${sku}`, { method: "DELETE" }).catch((error) => showToast(error.message));
+            products.splice(index, 1);
+            renderProducts();
+            filterProducts();
+          }),
+        );
+        renderProviderPrices();
+        renderOrders();
+        renderMovementReports();
+      };
+      const renderMovementReports = () => {
+        const entries = [...products].sort((a, b) =>
+          (b.entryDate || "").localeCompare(a.entryDate || ""),
+        );
+        document.getElementById("entryHistory").innerHTML = entries.length
+          ? entries
+              .map(
+                (product) =>
+                  `<tr><td>${product.entryDate || "Sin fecha"}</td><td><strong>${product.name}</strong><small>ID: ${product.sku}</small></td><td>${product.provider}</td><td>${product.stock} unidades</td></tr>`,
+              )
+              .join("")
+          : '<tr><td colspan="4" class="empty-state">Todavía no hay entradas registradas.</td></tr>';
+        const history = [...orders].sort((a, b) =>
+          (b.addedAt || "").localeCompare(a.addedAt || ""),
+        );
+        document.getElementById("orderHistory").innerHTML = history.length
+          ? history
+              .map(
+                (order) =>
+                  `<tr><td>${order.addedAt ? new Date(order.addedAt).toLocaleDateString("es-PE") : "Sin fecha"}</td><td><strong>${order.name}</strong><small>ID: ${order.sku}</small></td><td>${order.recommendedProvider || order.provider}</td><td>${money(Number(order.price) * Number(order.orderQuantity || 1))}</td></tr>`,
+              )
+              .join("")
+          : '<tr><td colspan="4" class="empty-state">Todavía no hay pedidos seleccionados.</td></tr>';
+      };
+      document.querySelectorAll(".report-toggle").forEach((toggle) =>
+        toggle.addEventListener("click", () => {
+          const block = toggle.closest(".report-block");
+          const isOpen = block.classList.contains("open");
+          document.querySelectorAll(".report-block").forEach((item) => {
+            item.classList.remove("open");
+            item
+              .querySelector(".report-toggle")
+              .setAttribute("aria-expanded", "false");
+            item.querySelector(".report-toggle b").textContent = "＋";
+          });
+          if (!isOpen) {
+            block.classList.add("open");
+            toggle.setAttribute("aria-expanded", "true");
+            toggle.querySelector("b").textContent = "−";
+          }
+        }),
+      );
+      const renderOrders = () => {
+        const empty = document.getElementById("ordersEmpty");
+        const list = document.getElementById("ordersList");
+        empty.hidden = orders.length > 0;
+        document.querySelector("#pedidos .order-stats strong").textContent =
+          orders.length;
+        list.innerHTML = orders
+          .map(
+            (order, index) =>
+              `<article class="order-item"><div><strong>${order.name}</strong><small>Proveedor recomendado: ${order.recommendedProvider || order.provider}</small><small>Laboratorio: ${order.laboratory || "—"}</small></div><span class="order-quantity">Cantidad <input class="order-quantity-input" data-index="${index}" type="number" min="1" value="${order.orderQuantity || 1}" aria-label="Cantidad de ${order.name}" /></span><span>P.U. COMPRA: ${money(order.price)}</span><span>P.T. COMPRA: ${money(Number(order.price) * Number(order.orderQuantity || 1))}</span><strong class="line-total">${money(Number(order.price) * Number(order.orderQuantity || 1))}</strong><button class="remove-order" data-index="${index}" aria-label="Quitar ${order.name} del pedido">×</button></article>`,
+          )
+          .join("");
+        const totalWithTax = orders.reduce(
+          (total, order) =>
+            total + Number(order.price) * Number(order.orderQuantity || 1),
+          0,
+        );
+        const subtotal = totalWithTax / 1.18;
+        const tax = totalWithTax - subtotal;
+        document.getElementById("orderSubtotal").textContent = money(subtotal);
+        document.getElementById("orderTax").textContent = money(tax);
+        document.getElementById("orderTotal").textContent = money(totalWithTax);
+        list.querySelectorAll(".order-quantity-input").forEach((input) =>
+          input.addEventListener("change", () => {
+            orders[Number(input.dataset.index)].orderQuantity = Math.max(
+              1,
+              Number(input.value),
+            );
+            saveOrder(orders[Number(input.dataset.index)]);
+            renderOrders();
+            renderMovementReports();
+          }),
+        );
+        list.querySelectorAll(".remove-order").forEach((button) =>
+          button.addEventListener("click", () => {
+            const index = Number(button.dataset.index);
+            const sku = orders[index].sku;
+            apiRequest(`/orders/${sku}`, { method: "DELETE" }).catch((error) => showToast(error.message));
+            orders.splice(index, 1);
+            renderOrders();
+          }),
+        );
+      };
+      const addToOrder = (index) => {
+        const product = products[index];
+        const alternatives = products.filter(
+          (item) => item.name.toLowerCase() === product.name.toLowerCase(),
+        );
+        const recommended = alternatives.reduce(
+          (best, item) =>
+            Number(item.price) < Number(best.price) ? item : best,
+          product,
+        );
+        if (!orders.some((order) => order.sku === product.sku)) {
+          orders.push({
+            ...product,
+            recommendedProvider: recommended.provider,
+            addedAt: new Date().toISOString(),
+          });
+          saveOrder(orders[orders.length - 1]);
+          renderProducts();
+          renderOrders();
+        }
+        showView("pedidos");
+      };
+      const editProduct = (index) => {
+        const product = products[index];
+        Object.entries(product).forEach(([name, value]) => {
+          const field = document.querySelector(`#productForm [name="${name}"]`);
+          if (field) field.value = value;
+        });
+        updatePurchaseTotal();
+        document.getElementById("productForm").dataset.editIndex = index;
+        document.getElementById("modalTitle").textContent = "Editar producto";
+        openModal();
+      };
+      document
+        .getElementById("goToOrderProducts")
+        .addEventListener("click", () => {
+          renderOrderProducts();
+          showView("pedido-productos");
+        });
+      document
+        .getElementById("backToOrders")
+        .addEventListener("click", () => showView("pedidos"));
+      document
+        .getElementById("newEntryButton")
+        .addEventListener("click", openModal);
+      document
+        .getElementById("showEnteredProducts")
+        .addEventListener("click", () => {
+          pendingProducts.forEach((product) => {
+            if (!products.some((item) => item.sku === product.sku))
+              products.push(product);
+          });
+          pendingProducts.forEach((product) => saveProduct({ ...product, status: "active" }));
+          pendingProducts.length = 0;
+          renderEntryProducts();
+          renderProducts();
+          showView("inventario");
+        });
+      const renderProviderPrices = () => {
+        const providerList = document.getElementById("providerList");
+        providerList.innerHTML = providers.length
+          ? providers
+              .map(
+                (provider) =>
+                  `<article><strong>${provider.name}</strong><span>RUC: ${provider.ruc}</span>${products
+                    .filter((product) => product.provider === provider.name)
+                    .map(
+                      (product) =>
+                        `<small>${product.name}: P.U. COMPRA ${money(product.price)} · venta ${money(product.salePrice)} · P.T. COMPRA ${money(product.wholesale)}</small>`,
+                    )
+                    .join("")}</article>`,
+              )
+              .join("")
+          : '<p class="empty-state">Todavía no hay proveedores registrados. Se mostrarán aquí al ingresar productos.</p>';
+      };
+      const filterProducts = () => {
+        const query = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const category = document.getElementById("categoryFilter").value;
+        const stock = document.getElementById("stockFilter").value;
+        const rows = [...document.querySelectorAll("#productTable tr")];
+        const matchingRows = rows.filter(
+          (row) =>
+            row.textContent.toLowerCase().includes(query) &&
+            (!category || row.dataset.category === category) &&
+            (!stock || row.dataset.stock === stock),
+        );
+        const totalPages = Math.max(
+          1,
+          Math.ceil(matchingRows.length / productsPerPage),
+        );
+        currentProductPage = Math.min(currentProductPage, totalPages);
+        const firstVisible = (currentProductPage - 1) * productsPerPage;
+        const lastVisible = firstVisible + productsPerPage;
+        rows.forEach((row) => {
+          row.hidden = !matchingRows.includes(row) ||
+            matchingRows.indexOf(row) < firstVisible ||
+            matchingRows.indexOf(row) >= lastVisible;
+        });
+        const from = matchingRows.length ? firstVisible + 1 : 0;
+        const to = Math.min(lastVisible, matchingRows.length);
+        document.getElementById("productSummary").textContent = matchingRows.length
+          ? `Mostrando ${from}-${to} de ${matchingRows.length} productos`
+          : "Mostrando 0 productos";
+        renderProductPagination(totalPages);
+      };
+      const renderProductPagination = (totalPages) => {
+        const pagination = document.getElementById("productPagination");
+        pagination.innerHTML = "";
+        const previous = document.createElement("button");
+        previous.type = "button";
+        previous.textContent = "‹";
+        previous.disabled = currentProductPage === 1;
+        previous.setAttribute("aria-label", "Página anterior");
+        previous.addEventListener("click", () => {
+          currentProductPage -= 1;
+          filterProducts();
+        });
+        pagination.appendChild(previous);
+        for (let page = 1; page <= totalPages; page += 1) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = page;
+          button.classList.toggle("current", page === currentProductPage);
+          button.setAttribute("aria-label", `Página ${page}`);
+          button.setAttribute("aria-current", page === currentProductPage ? "page" : "false");
+          button.addEventListener("click", () => {
+            currentProductPage = page;
+            filterProducts();
+          });
+          pagination.appendChild(button);
+        }
+        const next = document.createElement("button");
+        next.type = "button";
+        next.textContent = "›";
+        next.disabled = currentProductPage === totalPages;
+        next.setAttribute("aria-label", "Página siguiente");
+        next.addEventListener("click", () => {
+          currentProductPage += 1;
+          filterProducts();
+        });
+        pagination.appendChild(next);
+      };
+      renderProviderOptions();
+      renderProducts();
+      renderOrderProducts();
+      renderEntryProducts();
+      document
+        .getElementById("entryImportInput")
+        .addEventListener("change", (event) => {
+          const file = event.target.files[0];
+          if (!file || !importProvider) return;
+          const reader = new FileReader();
+          reader.onload = (loadEvent) => {
+            try {
+              const workbook = XLSX.read(loadEvent.target.result, {
+                type: "array",
+              });
+              const rows = XLSX.utils.sheet_to_json(
+                workbook.Sheets[workbook.SheetNames[0]],
+                { defval: "" },
+              );
+              const message = importProductsFromExcel(rows, importProvider);
+              const toast = document.getElementById("toast");
+              toast.textContent = message;
+              toast.classList.add("show");
+              setTimeout(() => toast.classList.remove("show"), 3500);
+            } catch (error) {
+              const toast = document.getElementById("toast");
+              toast.textContent = "No se pudo leer el archivo Excel.";
+              toast.classList.add("show");
+              setTimeout(() => toast.classList.remove("show"), 3500);
+            }
+            event.target.value = "";
+            importProvider = null;
+          };
+          reader.readAsArrayBuffer(file);
+        });
+      document
+        .getElementById("downloadTemplate")
+        .addEventListener("click", () => {
+          const headers = [
+            [
+              "Nombre",
+              "ID",
+              "Categoría",
+              "Laboratorio",
+              "Cantidad",
+              "Fecha de vencimiento",
+              "P.U. COMPRA",
+              "Precio de venta",
+              "P.T. COMPRA",
+            ],
+          ];
+          const sheet = XLSX.utils.aoa_to_sheet(headers);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, sheet, "Productos");
+          XLSX.writeFile(workbook, "formato_ingreso_CHEBROX.xlsx");
+        });
+      document
+        .getElementById("downloadOrdersExcel")
+        .addEventListener("click", () => {
+          const category = document.getElementById("orderExportCategory").value;
+          const fields = [
+            ...document.querySelectorAll(".export-field:checked"),
+          ].map((field) => field.value);
+          const filteredOrders = orders.filter(
+            (order) => !category || order.category === category,
+          );
+          const rows = filteredOrders.map((order) => {
+            const row = {};
+            if (fields.includes("name")) {
+              row["Producto"] = order.name;
+              row["ID"] = order.sku;
+            }
+            if (fields.includes("category")) row["Categoría"] = order.category;
+            if (fields.includes("laboratory"))
+              row["Laboratorio"] = order.laboratory || "—";
+            if (fields.includes("provider"))
+              row["Proveedor"] = order.recommendedProvider || order.provider;
+            if (fields.includes("quantity"))
+              row["Cantidad"] = order.orderQuantity || 1;
+            if (fields.includes("price"))
+              row["P.U. COMPRA"] = Number(order.price);
+            if (fields.includes("wholesale"))
+              row["P.T. COMPRA"] =
+                Number(order.price) * Number(order.orderQuantity || 1);
+            if (fields.includes("total"))
+              row["Total"] =
+                Number(order.price) * Number(order.orderQuantity || 1);
+            return row;
+          });
+          if (!rows.length) {
+            const toast = document.getElementById("toast");
+            toast.textContent = "No hay pedidos para esa categoría.";
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 3000);
+            return;
+          }
+          const sheet = XLSX.utils.json_to_sheet(rows);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, sheet, "Lista de pedidos");
+          XLSX.writeFile(workbook, "lista_pedidos_CHEBROX.xlsx");
+        });
+      ["searchInput", "categoryFilter", "stockFilter"].forEach((id) =>
+        document.getElementById(id).addEventListener("input", filterProducts),
+      );
+      document
+        .getElementById("productForm")
+        .addEventListener("submit", (event) => {
+          event.preventDefault();
+          const data = new FormData(event.target);
+          const product = Object.fromEntries(data.entries());
+          product.laboratory = (product.laboratory || "").trim();
+          product.wholesale = (
+            Number(product.stock) * Number(product.price)
+          ).toFixed(2);
+          const editIndex = event.target.dataset.editIndex;
+          if (editIndex === undefined) pendingProducts.push(product);
+          else products[Number(editIndex)] = product;
+          delete event.target.dataset.editIndex;
+          saveProduct({ ...product, status: editIndex === undefined ? "pending" : "active" });
+          closeModal();
+          const toast = document.getElementById("toast");
+          toast.classList.add("show");
+          setTimeout(() => toast.classList.remove("show"), 2800);
+          event.target.reset();
+          document.querySelector('#productForm [name="entryDate"]').value =
+            today();
+          document.getElementById("modalTitle").textContent = "Ingreso";
+          document
+            .getElementById("productForm")
+            .classList.add("entry-form-hidden");
+          renderEntryProducts();
+          renderProducts();
+          filterProducts();
+        });
+      document
+        .getElementById("deleteAllProducts")
+        .addEventListener("click", () => {
+          products.length = 0;
+          pendingProducts.length = 0;
+          apiRequest("/products", { method: "DELETE" }).catch((error) => showToast(error.message));
+          renderEntryProducts();
+          renderProducts();
+          filterProducts();
+        });
+      document.getElementById("exportButton").addEventListener("click", () => {
+        const toast = document.getElementById("toast");
+        toast.textContent = "Inventario listo para exportar";
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+          toast.textContent = "Producto guardado correctamente";
+        }, 2800);
+      });
+      const sidebar = document.querySelector(".sidebar");
+      const menuToggle = document.getElementById("menuToggle");
+      const menuOverlay = document.getElementById("menuOverlay");
+      const inventoryContent = document.querySelectorAll(".inventory-only");
+      const moduleViews = document.querySelectorAll(".module-view");
+      const viewNames = {
+        inventario: "Inventario",
+        ingreso: "Ingreso",
+        movimientos: "Movimientos",
+        proveedores: "Proveedores",
+        pedidos: "Lista de pedidos",
+        "pedido-productos": "Agregar productos al pedido",
+        configuracion: "Configuración",
+      };
+      const closeMenu = () => {
+        sidebar.classList.remove("open");
+        menuOverlay.classList.remove("show");
+        menuToggle.setAttribute("aria-expanded", "false");
+      };
+      const showView = (viewId) => {
+        if (location.hash.slice(1) !== viewId)
+          history.replaceState(null, "", `#${viewId}`);
+        const isInventory = viewId === "inventario";
+        inventoryContent.forEach((content) =>
+          content.classList.toggle("hidden-view", !isInventory),
+        );
+        moduleViews.forEach((view) =>
+          view.classList.toggle("active-view", view.id === viewId),
+        );
+        document.getElementById("currentView").textContent =
+          viewNames[viewId] || "Lista de productos";
+        document
+          .querySelectorAll('.nav-item[href^="#"]')
+          .forEach((item) =>
+            item.classList.toggle(
+              "active",
+              item.getAttribute("href") === `#${viewId}`,
+            ),
+          );
+        closeMenu();
+      };
+      menuToggle.addEventListener("click", () => {
+        const isOpen = sidebar.classList.toggle("open");
+        menuOverlay.classList.toggle("show", isOpen);
+        menuToggle.setAttribute("aria-expanded", String(isOpen));
+      });
+      menuOverlay.addEventListener("click", closeMenu);
+      document.querySelectorAll('.nav-item[href^="#"]').forEach((link) =>
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          showView(link.getAttribute("href").slice(1));
+        }),
+      );
+      window.addEventListener("hashchange", () =>
+        showView(location.hash.slice(1) || "inventario"),
+      );
+      const loadData = async () => {
+        try {
+          const data = await apiRequest("/bootstrap");
+          products = data.products || [];
+          pendingProducts = data.pendingProducts || [];
+          orders = data.orders || [];
+          providers = data.providers || [];
+          renderProviderOptions();
+          renderProducts();
+          renderOrderProducts();
+          renderEntryProducts();
+          filterProducts();
+        } catch (error) {
+          showToast(error.message);
+        }
+      };
+      showView(location.hash.slice(1) || "inventario");
+      if (localStorage.getItem("chebroxSession") === "active") loadData();
+      document.querySelectorAll("[data-toast]").forEach((button) =>
+        button.addEventListener("click", () => {
+          const toast = document.getElementById("toast");
+          toast.textContent = button.dataset.toast;
+          toast.classList.add("show");
+          setTimeout(() => toast.classList.remove("show"), 2800);
+        }),
+      );
+    </script>
+  </body>
+</html>
