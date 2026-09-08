@@ -819,7 +819,7 @@
       const apiBase =
         window.location.port === "3000"
           ? "/api"
-          : "http://localhost:3000/api";
+          : "https://backend-production-6612.up.railway.app/api";
       const apiRequest = async (path, options = {}) => {
         const response = await fetch(`${apiBase}${path}`, {
           headers: { "Content-Type": "application/json", ...(options.headers || {}) },
