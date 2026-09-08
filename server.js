@@ -72,7 +72,9 @@ function productPayload(body) {
 }
 
 app.post("/api/auth/login", (req, res) => {
-  const valid = String(req.body.pin || "") === String(process.env.CHEBROX_PIN || "2026");
+  const receivedPin = String(req.body.pin || "").trim();
+  const configuredPin = String(process.env.CHEBROX_PIN || "2026").trim();
+  const valid = receivedPin === configuredPin;
   if (!valid) return res.status(401).json({ error: "PIN incorrecto." });
   return res.json({ authenticated: true });
 });

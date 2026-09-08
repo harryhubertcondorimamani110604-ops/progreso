@@ -839,7 +839,9 @@
           showDashboard();
           loadData();
         } catch (error) {
-          loginError.textContent = error.message;
+          loginError.textContent = error.message.includes("Failed to fetch")
+            ? "No se pudo conectar con el backend. Abre http://localhost:3000 y vuelve a intentarlo."
+            : error.message;
         }
       });
       document
