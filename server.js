@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const path = require("path");
+const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
@@ -8,11 +9,11 @@ const mysql = require("mysql2/promise");
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "127.0.0.1",
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "chebrox",
+  host: process.env.DB_HOST || process.env.MYSQLHOST || "127.0.0.1",
+  port: Number(process.env.DB_PORT || process.env.MYSQLPORT || 3306),
+  user: process.env.DB_USER || process.env.MYSQLUSER || "root",
+  password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || "",
+  database: process.env.DB_NAME || process.env.MYSQLDATABASE || "chebrox",
   waitForConnections: true,
   connectionLimit: 10,
   dateStrings: true,
@@ -21,6 +22,15 @@ const pool = mysql.createPool({
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.static(__dirname));
+
+app.get("/api/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.json({ status: "ok" });
+  } catch (error) {
+    res.status(503).json({ status: "error" });
+  }
+});
 
 const productFields = `
   p.id, p.name, p.sku, p.category, p.laboratory, p.stock,
@@ -163,4 +173,15 @@ app.use((error, req, res, next) => {
   res.status(error.code === "ER_DUP_ENTRY" ? 409 : 500).json({ error: "No se pudo completar la operación." });
 });
 
-app.listen(port, () => console.log(`CHEBROX disponible en http://localhost:${port}`));
+async function start() {
+  const schema = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf8");
+  for (const statement of schema.split(/;\s*(?=CREATE|USE)/i)) {
+    if (statement.trim()) await pool.query(statement);
+  }
+  app.listen(port, () => console.log(`CHEBROX disponible en http://localhost:${port}`));
+}
+
+start().catch((error) => {
+  console.error("No se pudo iniciar la base de datos:", error.message);
+  process.exit(1);
+});
