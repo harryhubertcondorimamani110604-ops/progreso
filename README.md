@@ -25,3 +25,4 @@ El PIN de acceso se configura con `CHEBROX_PIN`; por defecto es `2026`.
 - `GET|POST|PUT|DELETE /api/orders`
 
 El navegador ya no necesita leer ni escribir inventario, proveedores o pedidos en `localStorage`; esos datos se almacenan en MySQL.
+# progreso
