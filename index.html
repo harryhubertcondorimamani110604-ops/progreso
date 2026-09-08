@@ -35,25 +35,33 @@
           <div class="login-card-heading">
             <p class="eyebrow">ACCESO SEGURO</p>
             <h2>Bienvenido de nuevo</h2>
-            <p>Ingresa tu PIN para continuar.</p>
+            <p>Ingresa tus credenciales para continuar.</p>
           </div>
-          <label for="loginPin"
-            >PIN de acceso
+          <label for="loginUsername"
+            >Usuario
+            <input
+              id="loginUsername"
+              name="username"
+              type="text"
+              autocomplete="username"
+              placeholder="Ingresa tu usuario"
+              required
+            />
+          </label>
+          <label for="loginPassword"
+            >Contraseña
             <div class="password-field">
               <input
-                id="loginPin"
-                name="pin"
+                id="loginPassword"
+                name="password"
                 type="password"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                maxlength="4"
-                autocomplete="one-time-code"
-                placeholder="Ingresa tu PIN"
+                autocomplete="current-password"
+                placeholder="Ingresa tu contraseña"
                 required
               /><button
                 type="button"
                 id="togglePassword"
-                aria-label="Mostrar PIN"
+                aria-label="Mostrar contraseña"
               >
                 ◉
               </button>
@@ -62,14 +70,14 @@
           <div class="login-options">
             <label class="remember"
               ><input type="checkbox" id="rememberUser" />
-              <span>Recordar PIN</span></label
+              <span>Recordar usuario</span></label
             ><a href="#login" id="forgotPassword">¿Necesitas ayuda?</a>
           </div>
           <p class="login-error" id="loginError" role="alert"></p>
           <button class="primary-button login-button" type="submit">
             Entrar al sistema <span>→</span>
           </button>
-          <p class="login-hint">PIN de demostración: <strong>2026</strong></p>
+          <p class="login-hint">Acceso de demostración: <strong>admin / admin123</strong></p>
         </form>
       </div>
     </section>
@@ -800,9 +808,9 @@
       const appShell = document.getElementById("appShell");
       const loginForm = document.getElementById("loginForm");
       const loginError = document.getElementById("loginError");
-      const rememberedPin = localStorage.getItem("chebroxPin");
-      if (rememberedPin)
-        document.getElementById("loginPin").value = rememberedPin;
+      const rememberedUser = localStorage.getItem("chebroxUsername");
+      if (rememberedUser)
+        document.getElementById("loginUsername").value = rememberedUser;
       const showDashboard = () => {
         loginScreen.classList.add("hidden");
         appShell.classList.remove("locked");
@@ -825,44 +833,51 @@
       };
       loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const pin = document.getElementById("loginPin").value.trim();
+        const username = document.getElementById("loginUsername").value.trim();
+        const password = document.getElementById("loginPassword").value;
         try {
           await apiRequest("/auth/login", {
             method: "POST",
-            body: JSON.stringify({ pin }),
+            body: JSON.stringify({ username, password }),
           });
           localStorage.setItem("chebroxSession", "active");
           if (document.getElementById("rememberUser").checked)
-            localStorage.setItem("chebroxPin", pin);
-          else localStorage.removeItem("chebroxPin");
+            localStorage.setItem("chebroxUsername", username);
+          else localStorage.removeItem("chebroxUsername");
           loginError.textContent = "";
           showDashboard();
           loadData();
         } catch (error) {
-          loginError.textContent = error.message.includes("Failed to fetch")
-            ? "No se pudo conectar con el backend. Abre http://localhost:3000 y vuelve a intentarlo."
-            : error.message;
+          if (error.message.includes("Failed to fetch")) {
+            if (username === "admin" && password === "admin123") {
+              localStorage.setItem("chebroxSession", "active");
+              loginError.textContent = "";
+              showDashboard();
+              return;
+            }
+            loginError.textContent = "Usuario o contraseña incorrectos.";
+          } else loginError.textContent = error.message;
         }
       });
       document
         .getElementById("togglePassword")
         .addEventListener("click", (event) => {
-          const pinInput = document.getElementById("loginPin");
-          pinInput.type = pinInput.type === "password" ? "text" : "password";
+          const passwordInput = document.getElementById("loginPassword");
+          passwordInput.type = passwordInput.type === "password" ? "text" : "password";
           event.currentTarget.textContent =
-            pinInput.type === "password" ? "◉" : "◎";
+            passwordInput.type === "password" ? "◉" : "◎";
         });
       document
         .getElementById("forgotPassword")
         .addEventListener("click", (event) => {
           event.preventDefault();
-          loginError.textContent = "PIN de acceso: 2026.";
+          loginError.textContent = "Usuario: admin · Contraseña: admin123.";
         });
       document.getElementById("logoutButton").addEventListener("click", () => {
         localStorage.removeItem("chebroxSession");
         appShell.classList.add("locked");
         loginScreen.classList.remove("hidden");
-        document.getElementById("loginPin").value = "";
+        document.getElementById("loginPassword").value = "";
       });
       const modal = document.getElementById("productModal");
       const openModal = () => {

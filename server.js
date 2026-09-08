@@ -72,10 +72,12 @@ function productPayload(body) {
 }
 
 app.post("/api/auth/login", (req, res) => {
-  const receivedPin = String(req.body.pin || "").trim();
-  const configuredPin = String(process.env.CHEBROX_PIN || "2026").trim();
-  const valid = receivedPin === configuredPin;
-  if (!valid) return res.status(401).json({ error: "PIN incorrecto." });
+  const username = String(req.body.username || "").trim();
+  const password = String(req.body.password || "");
+  const configuredUser = String(process.env.CHEBROX_USER || "admin").trim();
+  const configuredPassword = String(process.env.CHEBROX_PASSWORD || "admin123");
+  const valid = username === configuredUser && password === configuredPassword;
+  if (!valid) return res.status(401).json({ error: "Usuario o contraseña incorrectos." });
   return res.json({ authenticated: true });
 });
 

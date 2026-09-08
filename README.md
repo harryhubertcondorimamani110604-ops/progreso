@@ -13,7 +13,7 @@
 4. Inicia el sistema con `npm start`.
 5. Abre `http://localhost:3000`.
 
-El PIN de acceso se configura con `CHEBROX_PIN`; por defecto es `2026`.
+El acceso se configura con `CHEBROX_USER` y `CHEBROX_PASSWORD`; por defecto es `admin` / `admin123`.
 
 ## API
 
